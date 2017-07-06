@@ -19,8 +19,8 @@ platforms:
 suites:
   - name: default
     run_list:
-      # - recipe[chef-inspec::default]
-      - recipe[chefdk_getting_started]
+      - recipe[chef-inspec::default]
+      # - recipe[chefdk_getting_started]
     verifier:
       inspec_tests:
         - test/smoke/default
