@@ -1,0 +1,58 @@
+---
+name: jr-demo
+datacenter: aws-de
+
+vpcs:
+  - name: jr-demo
+    subnet: 10.0.0.0/16
+    auto_remove: true
+
+networks:
+  - name: public-net
+    vpc: jr-demo
+    subnet: 10.0.11.0/24
+    availability_zone: eu-central-1a
+    public: true
+
+security_groups:
+  - name: public
+    vpc: jr-demo
+    egress:
+      - ip: 0.0.0.0/0
+        protocol: any
+        from_port: '0'
+        to_port: '65535'
+    ingress:
+      - ip: 10.0.0.0/16
+        protocol: tcp
+        from_port: '0'
+        to_port: '65535'
+      - ip: 80.169.194.69/32
+        protocol: tcp
+        from_port: '80'
+        to_port: '80'
+      - ip: 80.169.194.69/32
+        protocol: tcp
+        from_port: '22'
+        to_port: '22'
+
+instances:
+  - name: public
+    type: t2.micro
+    image: ami-3f1bd150
+    network: public-net
+    start_ip: 10.0.11.11
+    count: 1
+    user_data: |-
+      #cloud-config     
+      repo_update: true
+      repo_upgrade: all
+      runcmd:
+       - 'sudo wget https://packages.chef.io/files/stable/chef/13.2.20/ubuntu/16.04/chef_13.2.20-1_amd64.deb'
+       - 'sudo dpkg -i chef_13.2.20-1_amd64.deb'
+       - 'sudo mkdir /etc/chef'
+       - 'sudo git clone https://github.com/r3labs/chef-inspec /etc/chef'
+       - 'sudo -E /usr/bin/chef-client --local-mode --config /etc/chef/client.rb --log_level auto --force-formatter --json-attributes /etc/chef/dna.json --chef-zero-port 8889'
+    key_pair: my-key
+    security_groups:
+      - public
